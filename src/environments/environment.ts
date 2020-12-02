@@ -3,7 +3,12 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  baseUrl: "//localhost:8000",
+  chatEndpoint: "//localhost:8000/api/chats",
+  PUSHER_WEBSOCKETS_KEY: "local",
+  PUSHER_WEBSOCKETS_SERVER: "127.0.0.1",
+  PUSHER_WEBSOCKETS_PORT: 6001,
 };
 
 /*
