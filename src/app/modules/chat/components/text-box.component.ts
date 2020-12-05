@@ -34,6 +34,8 @@ import { Component, OnInit, Input } from "@angular/core";
         --border-radius: 0.3rem;
         --highlight-height: 0;
         --inner-padding-end: 0;
+        --border-width: 0;
+        --background: var(--ion-color-light);
       }
       ion-textarea {
         max-height: 100px;
@@ -57,7 +59,7 @@ export class TextBoxComponent implements OnInit {
     };
     // this.messageService.setChatConfig(this.chatId);
     try {
-      await this.messageService.store(message).toPromise();
+      this.messageService.store(message).toPromise();
       this.message = "";
     } catch (e) {}
   }

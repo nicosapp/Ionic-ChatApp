@@ -8,6 +8,7 @@ import { Message } from "./../interface";
         *ngFor="let message of messages; let i = index"
         [message]="message"
         [ngClass]="{ 'break-flow': message.break }"
+        [showIsReadIcon]="i > lastMessageMemberIndex"
       ></app-message>
     </div>
   `,
@@ -25,6 +26,7 @@ import { Message } from "./../interface";
 })
 export class MessagesFlowComponent implements OnInit {
   @Input() messages: Message[];
+  @Input() lastMessageMemberIndex: number;
 
   constructor() {}
 

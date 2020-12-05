@@ -6,6 +6,7 @@ export const environment = {
   production: false,
   baseUrl: "//localhost:8000",
   chatEndpoint: "//localhost:8000/api/chats",
+  PUSHER_AUTH_ENDPOINT: "//localhost:8000/api/broadcasting/auth",
   PUSHER_WEBSOCKETS_KEY: "local",
   PUSHER_WEBSOCKETS_SERVER: "127.0.0.1",
   PUSHER_WEBSOCKETS_PORT: 6001,

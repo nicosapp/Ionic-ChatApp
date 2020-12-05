@@ -9,4 +9,5 @@ export interface Message {
   user_id: number;
   me: boolean;
   break: boolean;
+  is_read: boolean;
 }

@@ -1,6 +1,9 @@
 import { HttpClientModule, HttpClientXsrfModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
-import { BrowserModule } from "@angular/platform-browser";
+import {
+  BrowserModule,
+  HAMMER_GESTURE_CONFIG,
+} from "@angular/platform-browser";
 import { RouteReuseStrategy } from "@angular/router";
 
 import { IonicModule, IonicRouteStrategy } from "@ionic/angular";
@@ -10,6 +13,8 @@ import { StatusBar } from "@ionic-native/status-bar/ngx";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { httpInterceptorProviders } from "./services/http/http-interceptor-provider";
+
+import { IonicGestureConfig } from "./utils/ionic-gesture-config";
 
 @NgModule({
   declarations: [AppComponent],
@@ -25,6 +30,7 @@ import { httpInterceptorProviders } from "./services/http/http-interceptor-provi
     SplashScreen,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     httpInterceptorProviders,
+    { provide: HAMMER_GESTURE_CONFIG, useClass: IonicGestureConfig },
   ],
   bootstrap: [AppComponent],
 })

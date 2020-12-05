@@ -16,6 +16,8 @@ import { environment as env } from "src/environments/environment";
 export class ChatService {
   private itemName = "Chat";
   private endpoint: string = env.chatEndpoint;
+  private userId: number;
+  private channel: string = `private-chats.updated`;
 
   private items: Chat[] = [];
   itemsSubject = new Subject<Chat[]>();
@@ -24,6 +26,28 @@ export class ChatService {
 
   emitItems() {
     this.itemsSubject.next(this.items.slice());
+  }
+
+  listen() {
+    // private channel
+    const channel = this.pusherService.client.subscribe(this.channel);
+    channel.bind("App\\Events\\Chats\\ChatUpdated", (data: { chat: any }) => {
+      let { chat } = data;
+
+      console.log(data);
+
+      this.items = this.items.map((c: any) => {
+        if (c.id == chat.id) {
+          c = { ...c, ...{ last_message: chat.last_message } };
+        }
+        return c;
+      });
+      this.emitItems();
+    });
+  }
+
+  unlisten() {
+    this.pusherService.client.unsubscribe(this.channel);
   }
 
   get(): Observable<Chat[]> {

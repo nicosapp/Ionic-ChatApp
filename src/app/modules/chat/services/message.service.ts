@@ -10,6 +10,8 @@ import { Message } from "../interface";
 
 import { environment as env } from "src/environments/environment";
 
+import { orderBy as _orderBy } from "lodash";
+
 @Injectable({
   providedIn: "root",
 })
@@ -17,50 +19,89 @@ export class MessageService {
   private itemName = "Message";
   private endpoint: string;
   private apiEndpoint: string = `messages`;
-  private userId: number;
+  private user: any;
+  private chatId: number;
+  private members: any = [];
+  private channel = () => {
+    return `presence-chat.${this.chatId}`;
+  };
 
   private items: Message[] = [];
   itemsSubject = new Subject<any[]>();
-  private pusherService: PusherService;
+  private isMemberOnline: boolean;
+  memberOnlineSubject = new Subject<boolean>();
+  private isOnline = (count: number) => {
+    this.isMemberOnline = count > 1 ? true : false;
+    this.memberOnlineSubject.next(this.isMemberOnline);
+    if (this.isMemberOnline) this.markAsReadMessage();
+  };
 
-  constructor(public http: HttpClient) {
-    this.pusherService = new PusherService();
-    // console.log(this.pusherService.client);
-    const channel = this.pusherService.client.subscribe("chat");
+  constructor(public http: HttpClient, private pusherService: PusherService) {}
+
+  setChatConfig({ chatId, userId }) {
+    this.chatId = chatId;
+    // this.userId = userId;
+    this.endpoint = `${env.chatEndpoint}/${chatId}/${this.apiEndpoint}`;
+  }
+
+  listen() {
+    // private channel
+    const channel: any = this.pusherService.client.subscribe(this.channel());
+    channel.bind("pusher:subscription_succeeded", (members) => {
+      this.isOnline(channel.members.count);
+
+      const me = members.me;
+      this.user = me.info;
+    });
+    channel.bind("pusher:member_added", (member: any) => {
+      this.isOnline(channel.members.count);
+      this.members = [...this.members, ...[member.info]];
+    });
+    channel.bind("pusher:member_removed", (member: any) => {
+      this.isOnline(channel.members.count);
+      this.members = this.members.filter((m) => m.id != member.id);
+      console.log(this.members);
+    });
     channel.bind(
       "App\\Events\\Chats\\MessageSent",
       (data: { message: any }) => {
         let { message } = data;
         console.log(data);
-        message.me = this.userId == message.user_id;
-        if (!message.me) this.items.push(message);
+        message.me = this.user.id == message.user_id;
+        if (!message.me) {
+          this.items = [...[message], ...this.items];
+        }
         this.emitItems();
       }
     );
   }
 
-  setChatConfig({ chatId, userId }) {
-    this.endpoint = `${env.chatEndpoint}/${chatId}/${this.apiEndpoint}`;
-    this.userId = userId;
+  unlisten() {
+    this.pusherService.client.unsubscribe(this.channel());
   }
 
   emitItems() {
+    this.items = _orderBy(this.items, "updated_at", "asc");
+    this.items = this.items.map((m, i) => {
+      if (this.items[i + 1]) {
+        m.break = this.items[i].me !== this.items[i + 1].me;
+      }
+      return m;
+    });
     this.itemsSubject.next(this.items.slice());
+  }
+
+  markAsReadMessage() {
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (this.items[i].is_read) break;
+      this.items[i].is_read = true;
+    }
   }
 
   get(): Observable<Message[]> {
     return this.http.get<Message[]>(this.endpoint).pipe(
       map((res: any) => {
-        this.items = this.mapData(res);
-      }),
-      map((items: any) => {
-        //format message items
-        this.items = this.items.map((m, i) => {
-          if (this.items[i + 1]) {
-            m.break = this.items[i].me !== this.items[i + 1].me;
-          }
-          return m;
-        });
+        this.items = res.data;
         this.emitItems();
         return this.items;
       }),
@@ -83,10 +124,12 @@ export class MessageService {
   }
 
   store(item: any): Observable<Message> {
+    item.is_member_online = this.isMemberOnline;
     return this.http.post(`${this.endpoint}`, item).pipe(
       map((res: any) => {
         const data = this.mapData(res);
-        this.items.push(data);
+        this.items = [...[data], ...this.items];
+        // this.items.push(data);
         this.emitItems();
         return data;
       }),
