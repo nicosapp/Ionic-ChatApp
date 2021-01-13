@@ -16,12 +16,15 @@ import { httpInterceptorProviders } from "./services/http/http-interceptor-provi
 
 import { IonicGestureConfig } from "./utils/ionic-gesture-config";
 
+import { IonicStorageModule } from "@ionic/storage";
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
+    IonicStorageModule.forRoot(),
     AppRoutingModule,
     HttpClientModule,
   ],

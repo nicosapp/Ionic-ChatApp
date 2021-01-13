@@ -7,6 +7,10 @@ const routes: Routes = [
     loadChildren: () =>
       import("./tabs/tabs.module").then((m) => m.TabsPageModule),
   },
+  {
+    path: 'swipe',
+    loadChildren: () => import('./swipe/swipe.module').then( m => m.SwipePageModule)
+  },
 ];
 @NgModule({
   imports: [

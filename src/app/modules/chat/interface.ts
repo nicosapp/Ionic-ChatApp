@@ -10,4 +10,5 @@ export interface Message {
   me: boolean;
   break: boolean;
   is_read: boolean;
+  created_at: Date;
 }

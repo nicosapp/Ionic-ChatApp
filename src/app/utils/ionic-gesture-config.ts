@@ -8,8 +8,9 @@ import { HammerGestureConfig } from "@angular/platform-browser";
 @Injectable()
 export class IonicGestureConfig extends HammerGestureConfig {
   buildHammer(element: HTMLElement) {
+    let mc = null;
     if (window) {
-      const mc = new (<any>window).Hammer(element);
+      mc = new (<any>window).Hammer(element);
 
       for (const eventName in this.overrides) {
         if (eventName) {

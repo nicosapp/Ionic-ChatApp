@@ -13,5 +13,29 @@
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+  <div>
+    <ion-infinite-scroll (ionInfinite)="doInfinite($event)" position="top" threshold="20px">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more data...">
+      </ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+
+    <div>
+
+      <div *ngFor="let employee of itemListData">
+        <ion-avatar slot="start">
+          <!-- <img [src]="employee.imageUrl"> -->
+        </ion-avatar>
+        <ion-label>
+          <ion-text>
+            <h2>{{employee.name}}</h2>
+            <p>{{employee.jobtype}}</p>
+          </ion-text>
+          <ion-text color="medium">
+            <p>{{employee.email}}, {{employee.address}}</p>
+          </ion-text>
+        </ion-label>
+      </div>
+
+    </div>
+  </div>
 </ion-content>

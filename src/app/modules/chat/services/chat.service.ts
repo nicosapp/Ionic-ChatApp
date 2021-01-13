@@ -17,7 +17,9 @@ export class ChatService {
   private itemName = "Chat";
   private endpoint: string = env.chatEndpoint;
   private userId: number;
-  private channel: string = `private-chats.updated`;
+  private channel = () => {
+    return `private-users.${this.userId}.chats.updated`;
+  };
 
   private items: Chat[] = [];
   itemsSubject = new Subject<Chat[]>();
@@ -30,7 +32,7 @@ export class ChatService {
 
   listen() {
     // private channel
-    const channel = this.pusherService.client.subscribe(this.channel);
+    const channel = this.pusherService.client.subscribe(this.channel());
     channel.bind("App\\Events\\Chats\\ChatUpdated", (data: { chat: any }) => {
       let { chat } = data;
 
@@ -47,7 +49,7 @@ export class ChatService {
   }
 
   unlisten() {
-    this.pusherService.client.unsubscribe(this.channel);
+    this.pusherService.client.unsubscribe(this.channel());
   }
 
   get(): Observable<Chat[]> {

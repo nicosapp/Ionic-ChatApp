@@ -2,13 +2,16 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+const apiBaseUrl = "//192.168.0.20:8000";
+
 export const environment = {
   production: false,
-  baseUrl: "//localhost:8000",
-  chatEndpoint: "//localhost:8000/api/chats",
-  PUSHER_AUTH_ENDPOINT: "//localhost:8000/api/broadcasting/auth",
+  apiBaseUrl: apiBaseUrl,
+  baseUrl: apiBaseUrl,
+  chatEndpoint: `${apiBaseUrl}/api/chats`,
+  PUSHER_AUTH_ENDPOINT: `${apiBaseUrl}/api/broadcasting/auth`,
   PUSHER_WEBSOCKETS_KEY: "local",
-  PUSHER_WEBSOCKETS_SERVER: "127.0.0.1",
+  PUSHER_WEBSOCKETS_SERVER: "192.168.0.20",
   PUSHER_WEBSOCKETS_PORT: 6001,
 };
 

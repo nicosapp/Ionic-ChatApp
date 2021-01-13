@@ -24,7 +24,7 @@ import { Component, Input, OnInit } from "@angular/core";
             <ion-icon
               slot="icon-only"
               name="ellipse"
-              [color]="isOnline ? 'success' : null"
+              [color]="getIsOnline"
             ></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -52,6 +52,10 @@ export class ChatModalComponent implements OnInit {
   @Input() chat: any;
 
   private isOnline: boolean;
+
+  get getIsOnline() {
+    return this.isOnline ? "success" : null;
+  }
 
   get chatId() {
     return this.chat.id;

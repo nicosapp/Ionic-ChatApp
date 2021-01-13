@@ -20,12 +20,33 @@ import { findLastIndex as _findLastIndex } from "lodash";
   selector: "app-chat-container",
   template: `
     <div class="chat-container">
-      <div class="scroll-container" #scrollMe>
+      <ion-content
+        class="scroll-container"
+        #scrollMe
+        [scrollTop]="scrollMe.scrollHeight"
+      >
         <app-messages-flow
           [messages]="messages"
           [lastMessageMemberIndex]="lastMessageMemberIndex"
-        ></app-messages-flow>
-      </div>
+          *ngIf="messages.length; else loading"
+        >
+          <ion-infinite-scroll
+            infiniteScroll
+            position="top"
+            (ionInfinite)="doInfinite($event)"
+          >
+            <ion-infinite-scroll-content
+              loadingSpinner="bubbles"
+              loadingText="Loading more data..."
+            >
+            </ion-infinite-scroll-content>
+          </ion-infinite-scroll>
+        </app-messages-flow>
+        <ng-template #loading>
+          <chat-loading></chat-loading>
+        </ng-template>
+      </ion-content>
+
       <app-text-box [chatId]="chatId"></app-text-box>
     </div>
   `,
@@ -51,7 +72,7 @@ export class ChatContainerComponent implements OnInit, OnDestroy {
 
   private messageSubscription: Subscription;
   private onlineSubscription: Subscription;
-  private messages: Message[];
+  private messages: Message[] = [];
   private lastMessageMemberIndex: number;
 
   get orderedMessages() {
@@ -72,12 +93,14 @@ export class ChatContainerComponent implements OnInit, OnDestroy {
     });
     this.messageSubscription = this.messageService.itemsSubject.subscribe(
       (messages) => {
-        this.messages = messages;
         this.lastMessageMemberIndex = _findLastIndex(
-          this.messages,
+          messages,
           (m) => m.user_id != this.userId
         );
-        console.log(this.lastMessageMemberIndex);
+        this.messages = messages;
+        // setTimeout(() => {
+        //   this.scrollToBottom();
+        // }, 200);
       }
     );
     this.onlineSubscription = this.messageService.memberOnlineSubject.subscribe(
@@ -86,16 +109,28 @@ export class ChatContainerComponent implements OnInit, OnDestroy {
       }
     );
     this.messageService.listen();
-    this.messageService.get().subscribe();
+    this.messageService.getMessages().subscribe();
     this.messageService.emitItems();
   }
   ngAfterViewChecked() {
-    this.scrollToBottom();
+    // this.scrollToBottom();
   }
 
   scrollToBottom(): void {
+    console.log("ngChecked");
+    // console.log(this.myScrollContainer.nativeElement.scrollHeight);
     try {
       this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
     } catch (err) {}
+  }
+
+  doInfinite(infiniteScroll) {
+    this.messageService.getMessages().subscribe((payload) => {
+      if (payload.finished) {
+        infiniteScroll.target.disabled = true;
+      } else if (payload.received) {
+        infiniteScroll.target.complete();
+      }
+    });
   }
 }

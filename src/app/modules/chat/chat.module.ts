@@ -1,3 +1,4 @@
+import { LoadingComponent } from "./components/loading.component";
 import { ChatModalComponent } from "./components/chat-modal.component";
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
@@ -27,6 +28,7 @@ const declarations = [
   ChatsListComponent,
   ChatsListItemComponent,
   ChatModalComponent,
+  LoadingComponent,
 ];
 
 @NgModule({

@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { Storage } from "@ionic/storage";
 
 import {
   HttpEvent,
@@ -9,10 +10,13 @@ import {
 } from "@angular/common/http";
 
 import { Observable } from "rxjs";
+import { environment as env } from "src/environments/environment";
 
 @Injectable()
 export class HttpHeaderInterceptorService implements HttpInterceptor {
-  constructor() {}
+  private accessToken: string = null;
+
+  constructor(private storage: Storage) {}
   intercept(
     req: HttpRequest<any>,
     next: HttpHandler
@@ -21,9 +25,7 @@ export class HttpHeaderInterceptorService implements HttpInterceptor {
       headers: req.headers
         .set("Accept", "application/json")
         .set("Content-Type", "application/json"),
-      withCredentials: true,
     });
-
     return next.handle(req);
   }
 }

@@ -4,6 +4,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Subject, of } from "rxjs";
 import { environment as env } from "./../../environments/environment";
+import { Storage } from "@ionic/storage";
 
 @Injectable({
   providedIn: "root",
@@ -15,22 +16,28 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private storage: Storage
   ) {}
 
   async loginWith({ email, password }) {
     try {
-      await this.http.get(env.baseUrl + "/sanctum/csrf-cookie").toPromise();
-      await this.http
-        .post(env.baseUrl + "/login", { email, password })
+      const response: any = await this.http
+        .post(env.baseUrl + "/api/auth/signin", {
+          email,
+          password,
+          device_name: "android",
+        })
         .toPromise();
+      this.setLocalStorate(response.data);
       AuthService.loggedIn = true;
       this.authSubject.next(AuthService.loggedIn);
-      this.presentToast("You are now loggedin " + AuthService.user.name);
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
   }
   logout() {
-    return this.http.post(`${env.baseUrl}/logout`, {}).pipe(
+    return this.http.post(`${env.baseUrl}/api/auth/signout`, {}).pipe(
       map((res) => {
         AuthService.loggedIn = false;
         this.authSubject.next(AuthService.loggedIn);
@@ -43,6 +50,7 @@ export class AuthService {
       map((res: any) => {
         AuthService.user = res.data;
         AuthService.loggedIn = true;
+        this.presentToast("You are now loggedin " + AuthService.user.name);
         return res.data;
       }),
       catchError((err: any) => {
@@ -52,6 +60,27 @@ export class AuthService {
     );
   }
 
+  refreshToken() {}
+
+  setLocalStorate(x: LoginResult) {
+    console.log(x);
+    // localStorage.setItem("access_token", x.access_token);
+    this.storage.ready().then(() => {
+      this.storage.set("access_token", x.access_token);
+      this.storage.set("refresh_token", x.refresh_token);
+    });
+  }
+
+  private getTokenRemainingTime() {}
+
+  private startTokenTimer() {}
+
+  private stopTokenTimer() {
+    // this.timer?.unsubscribe();
+  }
+
+  clearLocalStorage() {}
+
   async presentToast(message) {
     const toast = await this.toastController.create({
       message,
@@ -59,4 +88,9 @@ export class AuthService {
     });
     toast.present();
   }
+}
+
+interface LoginResult {
+  access_token: string;
+  refresh_token?: string;
 }

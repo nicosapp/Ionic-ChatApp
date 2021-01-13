@@ -10,7 +10,7 @@ import { Message } from "../interface";
 
 import { environment as env } from "src/environments/environment";
 
-import { orderBy as _orderBy } from "lodash";
+import { sortBy as _sortBy } from "lodash";
 
 @Injectable({
   providedIn: "root",
@@ -25,6 +25,9 @@ export class MessageService {
   private channel = () => {
     return `presence-chat.${this.chatId}`;
   };
+
+  private currentPage: number = 1;
+  private lastPage: number = 1;
 
   private items: Message[] = [];
   itemsSubject = new Subject<any[]>();
@@ -81,7 +84,9 @@ export class MessageService {
   }
 
   emitItems() {
-    this.items = _orderBy(this.items, "updated_at", "asc");
+    this.items = _sortBy(this.items, (i) => {
+      return new Date(i.created_at);
+    });
     this.items = this.items.map((m, i) => {
       if (this.items[i + 1]) {
         m.break = this.items[i].me !== this.items[i + 1].me;
@@ -98,18 +103,31 @@ export class MessageService {
     }
   }
 
-  get(): Observable<Message[]> {
-    return this.http.get<Message[]>(this.endpoint).pipe(
-      map((res: any) => {
-        this.items = res.data;
-        this.emitItems();
-        return this.items;
-      }),
-      tap((_) => this.log(`fetched ${this.itemName}`)),
-      catchError(
-        this.handleError<Message[]>(this.log, `get${this.itemName}`, [])
-      )
+  getMessages() {
+    return this.get().pipe(
+      map((data) => {
+        if (this.currentPage > this.lastPage) return { finished: true };
+        return { received: true };
+      })
     );
+  }
+
+  get(): Observable<Message[]> {
+    return this.http
+      .get<Message[]>(`${this.endpoint}?page=${this.currentPage}`)
+      .pipe(
+        map((res: any) => {
+          this.items = [...this.items, ...res.data];
+          this.currentPage = this.currentPage + 1;
+          this.lastPage = res.meta.last_page;
+          this.emitItems();
+          return this.items;
+        }),
+        tap((_) => this.log(`fetched ${this.itemName}`)),
+        catchError(
+          this.handleError<Message[]>(this.log, `get${this.itemName}`, [])
+        )
+      );
   }
 
   show(item: Message | number): Observable<Message> {
@@ -125,11 +143,18 @@ export class MessageService {
 
   store(item: any): Observable<Message> {
     item.is_member_online = this.isMemberOnline;
+    item.created_at = new Date();
+    item.me = true;
+    this.items = [...[item], ...this.items]; //on ajoute le message à la liste de message
+    this.emitItems();
     return this.http.post(`${this.endpoint}`, item).pipe(
       map((res: any) => {
         const data = this.mapData(res);
-        this.items = [...[data], ...this.items];
-        // this.items.push(data);
+        this.items = this.items.map((item: any) => {
+          if (item.message === data.message) return data;
+          return item;
+        });
+        // this.items = [...[data], ...this.items];
         this.emitItems();
         return data;
       }),
